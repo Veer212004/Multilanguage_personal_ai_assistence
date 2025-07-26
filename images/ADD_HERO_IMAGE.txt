@@ -1,0 +1,21 @@
+Please add a hero background image for the website:
+
+1. Download one of these images (or a similar professional finance/business image):
+   - https://images.unsplash.com/photo-1560520653-9e0e4c89eb11 (Modern office building)
+   - https://images.unsplash.com/photo-1454165804606-c3d57bc86b40 (Business meeting)
+   - https://images.unsplash.com/photo-1486406146926-c627a92ad1ab (Corporate building)
+
+2. Save the image as "hero-bg.jpg" in this directory (public/images/)
+
+3. Image requirements:
+   - Resolution: At least 1920x1080 pixels
+   - Format: JPG
+   - Content: Professional business/finance themed
+   - Orientation: Landscape
+   - Style: Clean, modern, corporate look
+
+4. After adding the image:
+   - Make sure it's named exactly "hero-bg.jpg"
+   - Restart your development server
+
+The image will be used as the hero background on the home page with a dark overlay to ensure text readability. 
