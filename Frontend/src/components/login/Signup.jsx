@@ -111,7 +111,7 @@ const Signup = () => {
         picture: decoded.picture,
       };
       login(userData, credentialResponse.credential || "google-signup-token");
-      navigate("/Dashboard");
+      navigate("/");
     } catch {
       setError("Google signup failed.");
     }
