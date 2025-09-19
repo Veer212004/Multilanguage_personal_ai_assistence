@@ -23,25 +23,46 @@ const Footer = () => {
   const handleAPKDownload = async () => {
     try {
       setDownloadStatus('downloading');
+      
+      // ✅ Correct path - APK must be in public folder
       const apkUrl = "/assets/LoanMate.apk";
+      
+      console.log('🔍 Checking APK at:', apkUrl);
+      
+      // Check if file exists
       const response = await fetch(apkUrl, { method: 'HEAD' });
+      
       if (response.ok) {
+        console.log('✅ APK file found, starting download...');
+        
+        // File exists, proceed with download
         const link = document.createElement('a');
         link.href = apkUrl;
         link.download = 'LoanMate-v1.0.apk';
         link.style.display = 'none';
+        
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        
         setDownloadStatus('success');
         setTimeout(() => setDownloadStatus(''), 3000);
+        
+        console.log('📱 APK download started successfully');
+        
       } else {
+        console.error('❌ APK file not found at:', apkUrl);
         throw new Error('APK file not found');
       }
     } catch (error) {
-      console.error('Download error:', error);
+      console.error('❌ Download error:', error);
       setDownloadStatus('error');
-      setTimeout(() => setDownloadStatus(''), 3000);
+      setTimeout(() => setDownloadStatus(''), 5000); // Show error longer
+      
+      // Fallback: Open web app
+      setTimeout(() => {
+        window.open('https://loanmate-platform.vercel.app', '_blank');
+      }, 2000);
     }
   };
 
