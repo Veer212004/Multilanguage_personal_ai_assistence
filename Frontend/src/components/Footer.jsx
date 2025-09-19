@@ -4,6 +4,7 @@ import { Instagram } from "@mui/icons-material";
 
 const Footer = () => {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState(""); // ✅ Add name state
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState(''); // ✅ Added missing state
 
@@ -23,7 +24,7 @@ const Footer = () => {
     }
 
     try {
-      console.log('📧 Subscribing email:', email);
+      console.log('📧 Subscribing:', { email, name });
       
       // ✅ Try local first, then production
       const backendUrl = window.location.hostname === 'localhost' 
@@ -38,7 +39,10 @@ const Footer = () => {
           "Content-Type": "application/json",
           "Accept": "application/json"
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ 
+          email, 
+          name: name || "Friend" // ✅ Send name or default to "Friend"
+        }),
         // ✅ Remove credentials for now to avoid CORS issues
         // credentials: 'include'
       });
@@ -57,7 +61,8 @@ const Footer = () => {
       if (data.success) {
         setIsSubscribed(true);
         setEmail("");
-        alert("🎉 Subscription successful! Thank you for joining our newsletter.");
+        setName(""); // ✅ Clear name field
+        alert(`🎉 Subscription successful! Welcome email sent to ${email}.`);
       } else {
         alert(`❌ ${data.message || 'Subscription failed. Please try again.'}`);
       }
@@ -311,6 +316,16 @@ const handleAPKDownload = async () => {
               <div className="mb-6">
                 <p className="text-sm text-gray-600 mb-4">Get the latest financial tips and updates!</p>
                 <div className="space-y-3">
+                  {/* ✅ Add name input */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your name (optional)"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
                   <div className="relative">
                     <input
                       type="email"
@@ -318,6 +333,7 @@ const handleAPKDownload = async () => {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      required
                     />
                   </div>
                   <button
@@ -325,10 +341,14 @@ const handleAPKDownload = async () => {
                     disabled={isSubscribed}
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-4 py-3 rounded-xl text-white text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    {isSubscribed ? <>✓ Subscribed!</> : <>
-                      <Send size={16} />
-                      Subscribe
-                    </>}
+                    {isSubscribed ? (
+                      <>✓ Subscribed!</>
+                    ) : (
+                      <>
+                        <Send size={16} />
+                        Subscribe
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
