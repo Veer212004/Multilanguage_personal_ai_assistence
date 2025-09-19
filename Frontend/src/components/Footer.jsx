@@ -20,6 +20,98 @@ const Footer = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+ // Replace the handleAPKDownload function in your Footer.jsx
+const handleAPKDownload = async () => {
+  try {
+    setDownloadStatus('downloading');
+    
+    // ✅ Correct path - APK must be in public folder
+    const apkUrl = "/assets/LoanMate.apk";
+    
+    console.log('🔍 Checking APK at:', apkUrl);
+    
+    // Check if file exists
+    const response = await fetch(apkUrl, { method: 'HEAD' });
+    
+    if (response.ok) {
+      console.log('✅ APK file found, starting download...');
+      
+      // File exists, proceed with download
+      const link = document.createElement('a');
+      link.href = apkUrl;
+      link.download = 'LoanMate-v1.0.apk';
+      link.style.display = 'none';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setDownloadStatus('success');
+      setTimeout(() => setDownloadStatus(''), 3000);
+      
+      console.log('📱 APK download started successfully');
+      
+    } else {
+      console.error('❌ APK file not found at:', apkUrl);
+      throw new Error('APK file not found');
+    }
+  } catch (error) {
+    console.error('❌ Download error:', error);
+    setDownloadStatus('error');
+    setTimeout(() => setDownloadStatus(''), 5000); // Show error longer
+    
+    // Fallback: Open web app
+    setTimeout(() => {
+      window.open('https://loanmate-platform.vercel.app', '_blank');
+    }, 2000);
+  }
+};
+
+  const getDownloadButtonContent = () => {
+    switch (downloadStatus) {
+      case 'downloading':
+        return (
+          <>
+            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+            Downloading...
+          </>
+        );
+      case 'success':
+        return <>✅ Download Started!</>;
+      case 'error':
+        return <>❌ Try Again</>;
+      default:
+        return (
+          <>
+            <Download size={16} />
+            Download APK
+            <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
+          </>
+        );
+    }
+  };
+
+  const quickLinks = [
+    { label: "Home", href: "/" },
+    { label: "Loan Eligibility", href: "/loan-eligibility" },
+    { label: "Dashboard", href: "/Dashboard" },
+    { label: "Financial Tips", href: "/financial-tips" },
+    { label: "Bank Lists", href: "/banklists" }
+  ];
+
+  const socialLinks = [
+    { icon: Linkedin, href: "https://www.linkedin.com/in/veeresh-hedderi-83838525b", color: "hover:text-blue-600" },
+    { icon: MessageCircle, href: "https://wa.me/+918880717978", color: "hover:text-green-500" },
+    { icon: Github, href: "https://github.com/Veer212004/Multilanguage_personal_ai_assistence", color: "hover:text-gray-700" },
+    { icon: Instagram, href: "https://instagram.com/smart_soul_veer", color: "hover:text-blue-700" }
+  ];
+
+  const bottomLinks = [
+    { href: "/privacy", label: "Privacy Policy" },
+    { href: "/terms", label: "Terms of Service" },
+    { href: "/support", label: "Support" }
+  ];
+
   return (
     <footer className="bg-white text-gray-800 relative">
       {/* Decorative Wave */}
