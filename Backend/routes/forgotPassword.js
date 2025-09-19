@@ -297,22 +297,29 @@ LoanMate Security Team
 // Reset password with token - UPDATED VERSION
 router.post("/reset-password", async (req, res) => {
   try {
-    console.log('🔑 Reset password request:', req.body);
+    console.log('🔑 Reset password request received');
+    console.log('📧 Request body:', req.body);
+    console.log('🗂️ Current otpStorage contents:', Array.from(otpStorage.entries()));
     
     const { token, email, password } = req.body;
     
     if (!token || !email || !password) {
+      console.log('❌ Missing required fields:', { token: !!token, email: !!email, password: !!password });
       return res.status(400).json({
         success: false,
         message: "Token, email, and password are required"
       });
     }
 
+    console.log(`🔍 Looking for reset token with key: reset_${email}`);
+    
     // Check if reset token exists and is valid
     const storedData = otpStorage.get(`reset_${email}`);
     console.log(`📝 Stored reset data for ${email}:`, storedData);
     
     if (!storedData) {
+      console.log(`❌ No stored data found for key: reset_${email}`);
+      console.log('📊 All stored keys:', Array.from(otpStorage.keys()));
       return res.status(400).json({
         success: false,
         message: "Invalid or expired reset link. Please request a new one."
@@ -320,7 +327,12 @@ router.post("/reset-password", async (req, res) => {
     }
 
     // Check if token is expired
-    if (Date.now() > storedData.resetExpiry) {
+    const currentTime = Date.now();
+    console.log(`⏰ Current time: ${currentTime} (${new Date(currentTime)})`);
+    console.log(`⏰ Token expiry: ${storedData.resetExpiry} (${new Date(storedData.resetExpiry)})`);
+    console.log(`⏰ Time remaining: ${(storedData.resetExpiry - currentTime) / 1000 / 60} minutes`);
+    
+    if (currentTime > storedData.resetExpiry) {
       console.log(`⏰ Reset token expired for ${email}`);
       otpStorage.delete(`reset_${email}`);
       return res.status(400).json({
@@ -330,8 +342,13 @@ router.post("/reset-password", async (req, res) => {
     }
 
     // Verify token
-    console.log(`🔍 Comparing token: provided=${token}, stored=${storedData.resetToken}`);
+    console.log(`🔍 Token comparison:`);
+    console.log(`🔍 Provided token: "${token}"`);
+    console.log(`🔍 Stored token: "${storedData.resetToken}"`);
+    console.log(`🔍 Tokens match: ${storedData.resetToken === token}`);
+    
     if (storedData.resetToken !== token) {
+      console.log(`❌ Token mismatch for ${email}`);
       return res.status(400).json({
         success: false,
         message: "Invalid reset token."
@@ -341,120 +358,84 @@ router.post("/reset-password", async (req, res) => {
     // Password validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
     if (!passwordRegex.test(password)) {
+      console.log(`❌ Password validation failed for ${email}`);
       return res.status(400).json({
         success: false,
         message: "Password must be at least 8 characters with uppercase, lowercase, number, and special character."
       });
     }
 
+    console.log(`✅ All validations passed for ${email}`);
+
     // ✅ ACTUAL DATABASE UPDATE STARTS HERE
     try {
+      console.log(`🔍 Searching for user with email: ${email}`);
+      
       // 1. Find user in database
       const user = await User.findOne({ email: email });
       
       if (!user) {
+        console.log(`❌ User not found in database: ${email}`);
         return res.status(404).json({
           success: false,
           message: "User not found."
         });
       }
 
-      console.log(`👤 Found user: ${user.email}`);
+      console.log(`👤 Found user in database: ${user.email} (ID: ${user._id})`);
 
       // 2. Hash the new password
       const saltRounds = 12;
+      console.log(`🔐 Hashing password with ${saltRounds} salt rounds...`);
       const hashedPassword = await bcrypt.hash(password, saltRounds);
       
-      console.log(`🔐 Password hashed successfully`);
+      console.log(`🔐 Password hashed successfully (length: ${hashedPassword.length})`);
 
       // 3. Update password in database
-      await User.findByIdAndUpdate(user._id, { 
-        password: hashedPassword,
-        // Optional: Update password changed timestamp
-        passwordChangedAt: new Date()
-      });
+      console.log(`💾 Updating password in database for user: ${user._id}`);
+      
+      const updateResult = await User.findByIdAndUpdate(
+        user._id, 
+        { 
+          password: hashedPassword,
+          passwordChangedAt: new Date()
+        },
+        { new: true } // Return updated document
+      );
 
-      console.log(`✅ Password updated in database for user: ${email}`);
+      console.log(`✅ Password updated in database successfully`);
+      console.log(`📊 Update result ID: ${updateResult._id}`);
 
       // 4. Remove used reset token
       otpStorage.delete(`reset_${email}`);
-      
       console.log(`🗑️ Reset token removed for ${email}`);
 
     } catch (dbError) {
       console.error('❌ Database update error:', dbError);
       return res.status(500).json({
         success: false,
-        message: "Failed to update password in database."
+        message: "Failed to update password in database.",
+        error: dbError.message
       });
     }
-    // ✅ DATABASE UPDATE ENDS HERE
 
-    // Send confirmation email
-    const transporter = nodemailer.createTransporter({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"LoanMate Security" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "✅ Password Reset Successful - LoanMate",
-      text: `
-Your password has been reset successfully!
-
-If you didn't make this change, please contact our support team immediately.
-
-LoanMate Security Team
-      `,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
-          <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">✅ Password Reset Successful</h1>
-            <p style="color: #e1f5fe; margin: 10px 0 0 0; font-size: 16px;">LoanMate Security</p>
-          </div>
-          
-          <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h2 style="color: #333; margin-top: 0; text-align: center;">Password Updated Successfully</h2>
-            
-            <p style="color: #666; line-height: 1.6; text-align: center;">
-              Your LoanMate account password has been reset successfully. You can now log in with your new password.
-            </p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="https://loanmate-platform.vercel.app/login" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                        color: white; 
-                        padding: 15px 30px; 
-                        text-decoration: none; 
-                        border-radius: 25px; 
-                        font-weight: bold; 
-                        display: inline-block;
-                        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-                🔐 Login to Your Account
-              </a>
-            </div>
-            
-            <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;">
-              <p style="color: #856404; margin: 0; font-size: 14px; text-align: center;">
-                🚨 If you didn't make this change, please contact our support team immediately.
-              </p>
-            </div>
-          </div>
-          
-          <div style="text-align: center; margin-top: 20px;">
-            <p style="color: #888; font-size: 12px; margin: 0;">
-              © ${new Date().getFullYear()} LoanMate Security Team
-            </p>
-          </div>
-        </div>
-      `,
-    };
-
+    // Send confirmation email (optional - can be commented out for testing)
     try {
+      const transporter = nodemailer.createTransporter({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: `"LoanMate Security" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "✅ Password Reset Successful - LoanMate",
+        text: `Your password has been reset successfully!`,
+      };
+
       await transporter.sendMail(mailOptions);
       console.log(`✅ Password reset confirmation email sent to ${email}`);
     } catch (emailError) {
