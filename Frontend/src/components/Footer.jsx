@@ -7,6 +7,7 @@ const Footer = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState(''); // ✅ Added missing state
 
+  // Replace the handleNewsletterSubmit function
   const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
     if (!email) {
@@ -14,32 +15,71 @@ const Footer = () => {
       return;
     }
 
+    // ✅ Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
     try {
       console.log('📧 Subscribing email:', email);
       
-      const res = await fetch("https://loanplatform.onrender.com/api/subscribe", {
+      // ✅ Try local first, then production
+      const backendUrl = window.location.hostname === 'localhost' 
+        ? "http://localhost:5000" 
+        : "https://loanplatform.onrender.com";
+      
+      console.log('🌐 Using backend URL:', backendUrl);
+      
+      const res = await fetch(`${backendUrl}/api/subscribe`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "Accept": "application/json"
         },
         body: JSON.stringify({ email }),
-        credentials: 'include'
+        // ✅ Remove credentials for now to avoid CORS issues
+        // credentials: 'include'
       });
+
+      console.log('📡 Response status:', res.status);
+      console.log('📡 Response OK:', res.ok);
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`HTTP ${res.status}: ${errorText}`);
+      }
 
       const data = await res.json();
       console.log('📨 Subscribe response:', data);
       
-      if (res.ok && data.success) {
+      if (data.success) {
         setIsSubscribed(true);
         setEmail("");
-        alert("🎉 Subscription successful! Check your email for a welcome message.");
+        alert("🎉 Subscription successful! Thank you for joining our newsletter.");
       } else {
         alert(`❌ ${data.message || 'Subscription failed. Please try again.'}`);
       }
+      
     } catch (error) {
       console.error('❌ Subscription error:', error);
-      alert("❌ Network error. Please check your connection and try again.");
+      
+      // ✅ More specific error messages
+      let errorMessage = "❌ ";
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        errorMessage += "Cannot connect to server. Please check if the backend is running and try again.";
+      } else if (error.message.includes('CORS')) {
+        errorMessage += "Server configuration error. Please contact support.";
+      } else if (error.message.includes('404')) {
+        errorMessage += "Subscription service not found. Please contact support.";
+      } else if (error.message.includes('500')) {
+        errorMessage += "Server error. Please try again later.";
+      } else {
+        errorMessage += `Subscription failed: ${error.message}`;
+      }
+      
+      alert(errorMessage);
     }
   };
 
