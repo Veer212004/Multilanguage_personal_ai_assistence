@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Home,
   Sparkles,
+  Shield, // ✅ Add Shield icon for captcha
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -27,6 +28,9 @@ const Signup = () => {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [mathCaptcha, setMathCaptcha] = useState({ question: "", answer: 0 });
+  const [userAnswer, setUserAnswer] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ Add loading state
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -38,6 +42,29 @@ const Signup = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const generateMathCaptcha = () => {
+      const num1 = Math.floor(Math.random() * 10) + 1;
+      const num2 = Math.floor(Math.random() * 10) + 1;
+      const operators = ['+', '-'];
+      const operator = operators[Math.floor(Math.random() * operators.length)];
+      
+      let answer;
+      if (operator === '+') {
+        answer = num1 + num2;
+      } else {
+        answer = num1 - num2;
+      }
+      
+      setMathCaptcha({
+        question: `${num1} ${operator} ${num2} = ?`,
+        answer: answer
+      });
+    };
+    
+    generateMathCaptcha();
+  }, []);
+
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -45,12 +72,21 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsSubmitting(true);
+
+    // ✅ Check math captcha validation
+    if (parseInt(userAnswer) !== mathCaptcha.answer) {
+      setError("Incorrect answer to security question.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formData), // No captcha field needed
       });
 
       const data = await res.json();
@@ -60,6 +96,29 @@ const Signup = () => {
       navigate("/");
     } catch (err) {
       setError(err.message);
+      // Generate new math captcha on error
+      const generateMathCaptcha = () => {
+        const num1 = Math.floor(Math.random() * 10) + 1;
+        const num2 = Math.floor(Math.random() * 10) + 1;
+        const operators = ['+', '-'];
+        const operator = operators[Math.floor(Math.random() * operators.length)];
+        
+        let answer;
+        if (operator === '+') {
+          answer = num1 + num2;
+        } else {
+          answer = num1 - num2;
+        }
+        
+        setMathCaptcha({
+          question: `${num1} ${operator} ${num2} = ?`,
+          answer: answer
+        });
+        setUserAnswer("");
+      };
+      generateMathCaptcha();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -296,12 +355,70 @@ const Signup = () => {
                 </div>
               </div>
 
-              {/* Submit */}
+              {/* ✅ MATH CAPTCHA SECTION */}
+              <div>
+                <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
+                  <Shield size={16} className="text-blue-500" />
+                  Security Question
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="bg-gray-100 border border-gray-300 px-4 py-3 rounded-lg font-mono text-lg">
+                    {mathCaptcha.question}
+                  </div>
+                  <input
+                    type="number"
+                    value={userAnswer}
+                    onChange={(e) => setUserAnswer(e.target.value)}
+                    placeholder="Answer"
+                    className="w-24 px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const generateMathCaptcha = () => {
+                        const num1 = Math.floor(Math.random() * 10) + 1;
+                        const num2 = Math.floor(Math.random() * 10) + 1;
+                        const operators = ['+', '-'];
+                        const operator = operators[Math.floor(Math.random() * operators.length)];
+                        
+                        let answer;
+                        if (operator === '+') {
+                          answer = num1 + num2;
+                        } else {
+                          answer = num1 - num2;
+                        }
+                        
+                        setMathCaptcha({
+                          question: `${num1} ${operator} ${num2} = ?`,
+                          answer: answer
+                        });
+                        setUserAnswer("");
+                      };
+                      generateMathCaptcha();
+                    }}
+                    className="p-2 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg"
+                    title="Generate new question"
+                  >
+                    <RefreshCw size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit button - Updated validation */}
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg mt-6"
+                disabled={isSubmitting || !userAnswer}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg mt-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                Join FinMate 🚀
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Creating Account...
+                  </span>
+                ) : (
+                  "Join FinMate 🚀"
+                )}
               </button>
             </div>
           </form>
