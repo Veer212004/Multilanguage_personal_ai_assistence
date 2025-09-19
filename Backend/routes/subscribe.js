@@ -49,7 +49,7 @@ router.post("/", async (req, res) => {
     const mailOptions = {
       from: `"LoanMate - Financial Assistant" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: `🎉 Welcome to LoanMate, ${subscriberName}!`, // ✅ Personalized subject
+      subject: `🎉 Welcome to LoanMate, ${subscriberName}🤩`, // ✅ Personalized subject
       text: `
 Hi ${subscriberName}!
 
@@ -124,6 +124,9 @@ LoanMate Team
                 </a>
                 <a href="https://wa.me/+918880717978" style="margin: 0 10px; text-decoration: none;">
                   <span style="background: #25d366; color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px;">WhatsApp</span>
+                </a>
+                <a href="https://github.com/Veer212004/Multilanguage_personal_ai_assistence" style="margin: 0 10px; text-decoration: none;">
+                  <span style="background: #333; color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px;">GitHub</span>
                 </a>
               </div>
             </div>
