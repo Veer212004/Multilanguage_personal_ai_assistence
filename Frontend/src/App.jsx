@@ -24,7 +24,6 @@ import CreditScore from './components/Loancards/CreditScore ';
 import Employment from './components/Loancards/Employment';
 import LanguageSelector from './components/LanguageSelector';
 import Footer from './components/Footer';
-import ResetPassword from './components/login/ResetPassword'; // ✅ Import ResetPassword
 
 const theme = createTheme({
   palette: {
