@@ -7,12 +7,27 @@ const Footer = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState(''); // ✅ Added missing state
 
-  const handleNewsletterSubmit = (e) => {
+  const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
-    if (email) {
-      setIsSubscribed(true);
-      setEmail("");
-      setTimeout(() => setIsSubscribed(false), 3000);
+    if (!email) return;
+
+    try {
+      const res = await fetch("https://your-backend-url/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setIsSubscribed(true);
+        setEmail("");
+        alert("Subscription successful! Check your email.");
+      } else {
+        alert(data.message || "Subscription failed.");
+      }
+    } catch (err) {
+      alert("Subscription failed. Please try again.");
     }
   };
 
