@@ -1,6 +1,8 @@
 import express from "express";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import bcrypt from "bcryptjs"; // ✅ Add this import
+import User from "../models/User.js"; // ✅ Add this import (adjust path as needed)
 
 const router = express.Router();
 
@@ -292,7 +294,7 @@ LoanMate Security Team
   }
 });
 
-// Reset password with token
+// Reset password with token - UPDATED VERSION
 router.post("/reset-password", async (req, res) => {
   try {
     console.log('🔑 Reset password request:', req.body);
@@ -345,20 +347,51 @@ router.post("/reset-password", async (req, res) => {
       });
     }
 
-    // Here you would typically:
-    // 1. Hash the password
-    // 2. Update the password in your database
-    // 3. Remove the reset token
-    
-    // For now, we'll just simulate success
-    // TODO: Implement actual password update in database
-    console.log(`✅ Password reset successful for ${email}`);
-    
-    // Remove used reset token
-    otpStorage.delete(`reset_${email}`);
-    
+    // ✅ ACTUAL DATABASE UPDATE STARTS HERE
+    try {
+      // 1. Find user in database
+      const user = await User.findOne({ email: email });
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found."
+        });
+      }
+
+      console.log(`👤 Found user: ${user.email}`);
+
+      // 2. Hash the new password
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+      
+      console.log(`🔐 Password hashed successfully`);
+
+      // 3. Update password in database
+      await User.findByIdAndUpdate(user._id, { 
+        password: hashedPassword,
+        // Optional: Update password changed timestamp
+        passwordChangedAt: new Date()
+      });
+
+      console.log(`✅ Password updated in database for user: ${email}`);
+
+      // 4. Remove used reset token
+      otpStorage.delete(`reset_${email}`);
+      
+      console.log(`🗑️ Reset token removed for ${email}`);
+
+    } catch (dbError) {
+      console.error('❌ Database update error:', dbError);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update password in database."
+      });
+    }
+    // ✅ DATABASE UPDATE ENDS HERE
+
     // Send confirmation email
-    const transporter = nodemailer.createTransport({
+    const transporter = nodemailer.createTransporter({
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
