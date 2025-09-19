@@ -9,25 +9,37 @@ const Footer = () => {
 
   const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email) {
+      alert('Please enter your email address');
+      return;
+    }
 
     try {
-      const res = await fetch("https://your-backend-url/api/subscribe", {
+      console.log('📧 Subscribing email:', email);
+      
+      const res = await fetch("https://loanplatform.onrender.com/api/subscribe", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify({ email }),
+        credentials: 'include'
       });
 
       const data = await res.json();
-      if (res.ok) {
+      console.log('📨 Subscribe response:', data);
+      
+      if (res.ok && data.success) {
         setIsSubscribed(true);
         setEmail("");
-        alert("Subscription successful! Check your email.");
+        alert("🎉 Subscription successful! Check your email for a welcome message.");
       } else {
-        alert(data.message || "Subscription failed.");
+        alert(`❌ ${data.message || 'Subscription failed. Please try again.'}`);
       }
-    } catch (err) {
-      alert("Subscription failed. Please try again.");
+    } catch (error) {
+      console.error('❌ Subscription error:', error);
+      alert("❌ Network error. Please check your connection and try again.");
     }
   };
 
