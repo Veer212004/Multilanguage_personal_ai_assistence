@@ -24,6 +24,7 @@ import CreditScore from './components/Loancards/CreditScore ';
 import Employment from './components/Loancards/Employment';
 import LanguageSelector from './components/LanguageSelector';
 import Footer from './components/Footer';
+import ResetPassword from './components/login/ResetPassword'; // ✅ Import ResetPassword
 
 const theme = createTheme({
   palette: {
@@ -121,6 +122,7 @@ const AppContent = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} /> {/* ✅ Add this route */}
             <Route path="/profile" element={<Profile />} />
             <Route path="/banklists" element={<Banklists />} />
             <Route path="/loan-eligibility" element={<ProtectedRoute><LoanEligibility /></ProtectedRoute>} />
