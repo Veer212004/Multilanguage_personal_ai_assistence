@@ -6,8 +6,11 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   try {
     console.log('📧 Subscribe request received:', req.body);
+    console.log('🔍 Environment check:');
+    console.log('EMAIL_USER:', process.env.EMAIL_USER ? '✅ Set' : '❌ Missing');
+    console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '✅ Set' : '❌ Missing');
     
-    const { email, name } = req.body; // ✅ Extract both email and name
+    const { email, name } = req.body;
     
     if (!email) {
       return res.status(400).json({ 
@@ -16,12 +19,17 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // ✅ Use name or default to "Friend"
+    // ✅ Check if email credentials are configured
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error('❌ Email credentials not configured');
+      return res.status(500).json({
+        success: false,
+        message: "Email service not configured"
+      });
+    }
+
     const subscriberName = name && name.trim() ? name.trim() : "Friend";
     
-    console.log('📧 Subscriber email:', email);
-    console.log('👤 Subscriber name:', subscriberName);
-
     // ✅ Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -31,27 +39,39 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // ✅ Create transporter
+    // ✅ Fixed: Use createTransport (not createTransporter)
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
-    // ✅ Test connection
+    // ✅ Test connection with detailed error handling
     console.log('🔍 Testing email connection...');
-    await transporter.verify();
-    console.log('✅ Email connection verified');
+    try {
+      await transporter.verify();
+      console.log('✅ Email connection verified');
+    } catch (verifyError) {
+      console.error('❌ Email connection failed:', verifyError);
+      return res.status(500).json({
+        success: false,
+        message: "Email service connection failed",
+        error: process.env.NODE_ENV === 'development' ? verifyError.message : undefined
+      });
+    }
 
-    // ✅ Email content with personalized subject and content
+    // ✅ Simplified email for testing
     const mailOptions = {
-      from: `"LoanMate - Financial Assistant" <${process.env.EMAIL_USER}>`,
+      from: `"LoanMate Team" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: `🎉 Welcome to LoanMate, ${subscriberName}🤩`, // ✅ Personalized subject
+      subject: ` $🤖$ Welcome to LoanMate, ${subscriberName}!`,
       text: `
-Hi ${subscriberName}!
+Hi ${subscriberName}😎
 
 Thank you for subscribing to LoanMate newsletter!
 
@@ -66,7 +86,7 @@ Visit our platform: https://loanmate-platform.vercel.app
 Best regards,
 LoanMate Team
       `,
-      html: `
+        html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
             <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Welcome to LoanMate, ${subscriberName}!</h1>
@@ -146,43 +166,63 @@ LoanMate Team
       `,
     };
 
-    console.log('📤 Sending email FROM:', mailOptions.from);
-    console.log('📥 Sending email TO:', mailOptions.to);
-    console.log('📧 Email subject:', mailOptions.subject);
-    console.log('👤 Personalized for:', subscriberName);
+    console.log('📤 Attempting to send email...');
+    console.log('From:', mailOptions.from);
+    console.log('To:', mailOptions.to);
 
-    // ✅ Send email
-    const info = await transporter.sendMail(mailOptions);
+    // ✅ Send email with timeout
+    const info = await Promise.race([
+      transporter.sendMail(mailOptions),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Email timeout')), 30000)
+      )
+    ]);
     
     console.log('✅ Email sent successfully!');
-    console.log('📧 Message ID:', info.messageId);
-    console.log('📧 Email sent to:', `${subscriberName} <${email}>`);
+    console.log('Message ID:', info.messageId);
     
     res.status(200).json({ 
       success: true, 
-      message: `Welcome email sent successfully to ${subscriberName}! Check your inbox.`,
-      messageId: info.messageId,
-      recipient: `${subscriberName} <${email}>`
+      message: `Welcome email sent successfully to ${subscriberName}!`,
+      messageId: info.messageId
     });
     
   } catch (error) {
-    console.error('❌ Email sending failed:', error);
+    console.error('❌ Email sending failed:');
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Error stack:', error.stack);
+    
+    // ✅ Send different messages based on error type
+    let errorMessage = "Failed to send welcome email. Please try again.";
+    
+    if (error.code === 'EAUTH') {
+      errorMessage = "Email authentication failed. Please contact support.";
+    } else if (error.code === 'ETIMEDOUT' || error.message === 'Email timeout') {
+      errorMessage = "Email service timeout. Please try again.";
+    } else if (error.code === 'ENOTFOUND') {
+      errorMessage = "Email service unavailable. Please try again later.";
+    }
     
     res.status(500).json({ 
       success: false, 
-      message: "Failed to send welcome email. Please try again.",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: errorMessage,
+      error: process.env.NODE_ENV === 'development' ? {
+        message: error.message,
+        code: error.code
+      } : undefined
     });
   }
 });
 
-// ✅ Test endpoint
+// ✅ Enhanced test endpoint
 router.get("/test", (req, res) => {
   res.json({ 
     message: "Subscribe API is working!", 
     timestamp: new Date(),
-    emailUser: process.env.EMAIL_USER,
-    emailConfigured: !!process.env.EMAIL_PASS
+    emailUser: process.env.EMAIL_USER || 'Not configured',
+    emailConfigured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS),
+    nodeMailerVersion: "Available"
   });
 });
 

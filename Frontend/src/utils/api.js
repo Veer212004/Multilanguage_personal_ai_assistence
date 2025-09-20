@@ -1,47 +1,50 @@
-// Create src/utils/api.js
-export const getApiBaseUrl = () => {
-  // Check if running in Capacitor (mobile app)
-  if (window.Capacitor) {
-    return 'https://loanplatform.onrender.com'; // Always use production URL for mobile
-  }
-  
-  // Check if running in development
-  if (import.meta.env.DEV) {
-    return 'http://localhost:5000'; // Local development
-  }
-  
-  // Production web app
-  return 'https://loanplatform.onrender.com';
-};
+import { CapacitorHttp } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 
-// Enhanced fetch function with better error handling for mobile
+// ✅ Use your deployed backend
+const API_BASE_URL = 'https://loanplatform.onrender.com';
+
+// ✅ Create API utility for both web and mobile
 export const apiRequest = async (endpoint, options = {}) => {
-  const baseUrl = getApiBaseUrl();
-  const url = `${baseUrl}${endpoint}`;
-  
-  console.log(`🌐 API Request: ${options.method || 'GET'} ${url}`);
+  const url = `${API_BASE_URL}${endpoint}`;
   
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      ...options.headers,
     },
-    credentials: 'include',
     ...options,
   };
 
   try {
-    const response = await fetch(url, defaultOptions);
-    
-    console.log(`📡 Response: ${response.status} ${response.statusText}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    // ✅ Use CapacitorHttp for native platforms
+    if (Capacitor.isNativePlatform()) {
+      console.log('📱 Using Capacitor HTTP for native platform');
+      
+      const response = await CapacitorHttp.request({
+        url,
+        method: options.method || 'GET',
+        headers: defaultOptions.headers,
+        data: options.body ? JSON.parse(options.body) : undefined,
+      });
+
+      return {
+        ok: response.status >= 200 && response.status < 300,
+        status: response.status,
+        json: async () => response.data,
+        text: async () => JSON.stringify(response.data),
+      };
+    } else {
+      // ✅ Use fetch for web platforms
+      console.log('🌐 Using fetch for web platform');
+      return await fetch(url, defaultOptions);
     }
-    
-    return await response.json();
   } catch (error) {
-    console.error(`❌ API Error: ${error.message}`);
+    console.error('❌ API Request Error:', error);
     throw error;
   }
 };
+
+// ✅ Export API base for direct use
+export const API_BASE = API_BASE_URL;

@@ -1082,7 +1082,7 @@ const Home = () => {
         </Container>
       </Box>
 
-      {/* Testimonials Section */}
+      Testimonials Section
       <Box sx={{ bgcolor: 'grey.50', py: 8 }}>
         <Container maxWidth="lg">
           <Typography
@@ -1107,16 +1107,177 @@ const Home = () => {
 <Container maxWidth="lg" sx={{ py: 8 }}>
   <Grid container spacing={4} alignItems="center">
     <Grid item xs={12} md={6}>
-      {/* ... existing content ... */}
+      {/* Contact Information Section */}
+      <Box sx={{ mb: 4 }}>
+        <Typography 
+          variant="h3" 
+          component="h2" 
+          sx={{ 
+            fontWeight: 'bold',
+            color: 'primary.main',
+            mb: 2,
+            fontSize: { xs: '2rem', md: '2.5rem' }
+          }}
+        >
+          Get Expert Loan Advice
+        </Typography>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            color: 'text.secondary',
+            mb: 3,
+            lineHeight: 1.6
+          }}
+        >
+          Fill out this form and get personalized solutions to your loan queries from our financial experts
+        </Typography>
+      </Box>
+
+      {/* Features List */}
+      <Box sx={{ mb: 4 }}>
+        {[
+          { icon: '💡', title: 'Expert Guidance', desc: 'Get advice from certified loan specialists' },
+          { icon: '⚡', title: 'Quick Response', desc: 'Receive solutions within 24 hours' },
+          { icon: '🔒', title: 'Secure & Confidential', desc: 'Your information is completely protected' },
+          { icon: '💰', title: 'Best Rates', desc: 'Access to competitive loan rates and terms' }
+        ].map((feature, index) => (
+          <Box 
+            key={index}
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              mb: 2,
+              p: 2,
+              borderRadius: '12px',
+              bgcolor: 'rgba(25, 118, 210, 0.05)',
+              border: '1px solid rgba(25, 118, 210, 0.1)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                bgcolor: 'rgba(25, 118, 210, 0.08)',
+                transform: 'translateX(5px)'
+              }
+            }}
+          >
+            <Box 
+              sx={{ 
+                fontSize: '24px', 
+                mr: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                bgcolor: 'primary.main',
+                color: 'white'
+              }}
+            >
+              {feature.icon}
+            </Box>
+            <Box>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 600, 
+                  color: 'primary.main',
+                  fontSize: '1.1rem' 
+                }}
+              >
+                {feature.title}
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: 'text.secondary',
+                  fontSize: '0.9rem' 
+                }}
+              >
+                {feature.desc}
+              </Typography>
+            </Box>
+          </Box>
+        ))}
+      </Box>
+
+      {/* Trust Indicators */}
+      <Box 
+        sx={{ 
+          p: 3,
+          borderRadius: '12px',
+          bgcolor: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(25, 118, 210, 0.1) 100%)',
+          border: '2px solid rgba(25, 118, 210, 0.1)'
+        }}
+      >
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            color: 'primary.main', 
+            fontWeight: 600, 
+            mb: 1,
+            textAlign: 'center'
+          }}
+        >
+          Providing the Best Solutions to your Problems
+        </Typography>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: 'text.secondary',
+            textAlign: 'center',
+            fontSize: '0.9rem'
+          }}
+        >
+          Join thousands who have found their perfect loan solution with our expert guidance
+        </Typography>
+      </Box>
     </Grid>
+    
     <Grid item xs={12} md={6}>
       <Card
         sx={{
-          p: 3,
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
-          borderRadius: '16px',
+          p: 4,
+          boxShadow: '0 12px 32px rgba(25, 118, 210, 0.15)',
+          borderRadius: '20px',
+          border: '1px solid rgba(25, 118, 210, 0.1)',
+          bgcolor: 'white',
+          position: 'relative',
+          overflow: 'visible',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: -2,
+            left: -2,
+            right: -2,
+            bottom: -2,
+            background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(25, 118, 210, 0.05) 100%)',
+            borderRadius: '22px',
+            zIndex: -1
+          }
         }}
       >
+        {/* Form Header */}
+        <Box sx={{ textAlign: 'center', mb: 3 }}>
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              fontWeight: 'bold', 
+              color: 'primary.main',
+              mb: 1
+            }}
+          >
+            Get Your Free Support
+          </Typography>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: 'text.secondary',
+              fontSize: '0.9rem'
+            }}
+          >
+            Fill out the form below and our experts will contact you with personalized loan solutions
+          </Typography>
+        </Box>
+
         {/* Success Message */}
         {contactSuccess && (
           <Box sx={{ mb: 3 }}>
@@ -1126,8 +1287,9 @@ const Home = () => {
                 p: 2,
                 bgcolor: 'success.light',
                 color: 'success.contrastText',
-                borderRadius: '8px',
-                textAlign: 'center'
+                borderRadius: '12px',
+                textAlign: 'center',
+                fontWeight: 500
               }}
             >
               {contactSuccess}
@@ -1144,8 +1306,9 @@ const Home = () => {
                 p: 2,
                 bgcolor: 'error.light',
                 color: 'error.contrastText',
-                borderRadius: '8px',
-                textAlign: 'center'
+                borderRadius: '12px',
+                textAlign: 'center',
+                fontWeight: 500
               }}
             >
               {contactError}
@@ -1154,7 +1317,7 @@ const Home = () => {
         )}
 
         <form onSubmit={handleContactSubmit}>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -1165,6 +1328,21 @@ const Home = () => {
                 variant="outlined"
                 required
                 disabled={contactLoading}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'primary.main',
+                      borderWidth: '2px'
+                    }
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: 'primary.main',
+                  }
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -1178,12 +1356,27 @@ const Home = () => {
                 type="email"
                 required
                 disabled={contactLoading}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'primary.main',
+                      borderWidth: '2px'
+                    }
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: 'primary.main',
+                  }
+                }}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="How can we help you?"
+                label="How can we help you? (Loan type, amount, purpose, etc.)"
                 name="message"
                 value={contactForm.message}
                 onChange={handleContactChange}
@@ -1192,8 +1385,50 @@ const Home = () => {
                 rows={4}
                 required
                 disabled={contactLoading}
+                placeholder="Tell us about your loan requirements, preferred amount, purpose, and any specific questions you have..."
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'primary.main',
+                      borderWidth: '2px'
+                    }
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: 'primary.main',
+                  }
+                }}
               />
             </Grid>
+            
+            {/* Privacy Notice */}
+            <Grid item xs={12}>
+              <Box 
+                sx={{ 
+                  p: 2, 
+                  bgcolor: 'rgba(25, 118, 210, 0.05)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(25, 118, 210, 0.1)'
+                }}
+              >
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    color: 'text.secondary',
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: '0.75rem'
+                  }}
+                >
+                  <span style={{ marginRight: '4px' }}>🔒</span>
+                  Your information is secure and will only be used to provide you with loan advice. We respect your privacy.
+                </Typography>
+              </Box>
+            </Grid>
+
             <Grid item xs={12}>
               <Button
                 fullWidth
@@ -1205,19 +1440,48 @@ const Home = () => {
                 startIcon={contactLoading ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
                 sx={{
                   height: 56,
-                  borderRadius: '8px',
+                  borderRadius: '12px',
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
                   transition: 'all 0.3s ease',
                   '&:hover': {
-                    transform: contactLoading ? 'none' : 'translateY(-2px)',
-                    boxShadow: contactLoading ? 'none' : '0 8px 20px rgba(21, 101, 192, 0.3)',
+                    transform: contactLoading ? 'none' : 'translateY(-3px)',
+                    boxShadow: contactLoading ? 'none' : '0 12px 28px rgba(25, 118, 210, 0.4)',
+                    background: contactLoading ? undefined : 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)'
                   },
+                  '&:disabled': {
+                    background: 'rgba(0, 0, 0, 0.12)',
+                  }
                 }}
               >
-                {contactLoading ? 'Sending...' : 'Send Message'}
+                {contactLoading ? 'Sending Your Request...' : 'Get Free Loan Support'}
               </Button>
             </Grid>
           </Grid>
         </form>
+
+        {/* Additional Info */}
+        <Box sx={{ mt: 3, textAlign: 'center' }}>
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: 'text.secondary',
+              fontSize: '0.75rem'
+            }}
+          >
+            📞 Need immediate help? Call us at{' '}
+            <Box 
+              component="span" 
+              sx={{ 
+                color: 'primary.main', 
+                fontWeight: 600 
+              }}
+            >
+              8880717978
+            </Box>
+          </Typography>
+        </Box>
       </Card>
     </Grid>
   </Grid>

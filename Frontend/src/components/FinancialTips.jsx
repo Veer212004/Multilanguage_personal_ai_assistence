@@ -104,7 +104,7 @@ const FinancialTips = () => {
       title: "Smart Advisor",
       description: "Get AI-powered personalized financial recommendations",
       key: 'advisor',
-      path: '/dashboard',
+      path: '/Dashboard',
       color: '#ed6c02'
     },
     {

@@ -11,9 +11,7 @@ import { ArrowBackIos } from '@mui/icons-material';
 // ✅ Add Capacitor imports
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-
-// point to your backend
-const API_BASE = "https://loanplatform.onrender.com";
+import { apiRequest } from '../../utils/api.js';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -37,24 +35,33 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      console.log('🔐 Attempting login...');
+      
+      const response = await apiRequest('/api/auth/login', {
+        method: 'POST',
         body: JSON.stringify(formData),
-        credentials: "include",
       });
 
-      if (!res.ok) {
-        const msg = (await res.json()).message || "Login failed";
-        throw new Error(msg);
-      }
+      const data = await response.json();
+      console.log('📡 Login response:', data);
 
-      const data = await res.json();
-      login(data.user, data.token);
-      navigate('/');
-    } catch (err) {
-      setError(err.message || "Invalid email or password");
+      if (data.success) {
+        console.log('✅ Login successful');
+        login(data.user, data.token);
+        navigate('/dashboard');
+      } else {
+        setError(data.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      setError('Network error. Please check your connection.');
     }
   };
 

@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 
 import authRoutes from "./routes/authRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
-import subscribeRoutes from "./routes/subscribe.js";
+import subscribeRoutes from './routes/subscribe.js';
 import forgotPasswordRoutes from "./routes/forgotPassword.js";
 import chatbotRoutes from './routes/chatbotRoutes.js';
 import { errorHandler } from "./middleware/errorMiddleware.js";
@@ -32,6 +32,10 @@ app.use(cors({
     "ionic://localhost", // ✅ Ionic
     "http://10.0.2.2:5000", // ✅ Android emulator
     "http://127.0.0.1:5173", // ✅ Alternative localhost
+    "file://", // ✅ Add for mobile file protocol
+    "capacitor://", // ✅ Add capacitor protocol
+    "ionic://", // ✅ Add ionic protocol
+    "*" // ✅ Allow all origins for mobile (you can restrict this later)
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -41,7 +45,8 @@ app.use(cors({
     'Accept',
     'Origin',
     'X-Requested-With',
-    'Access-Control-Allow-Headers'
+    'Access-Control-Allow-Headers',
+    'X-Capacitor-Platform' // ✅ Add Capacitor header
   ],
   optionsSuccessStatus: 200 // ✅ For legacy browser support
 }));
@@ -51,7 +56,12 @@ app.options('*', cors());
 
 // ✅ Add request logging for debugging
 app.use((req, res, next) => {
-  console.log(`📡 ${new Date().toISOString()} - ${req.method} ${req.url} from ${req.get('Origin') || 'unknown'}`);
+  console.log(`📡 ${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Origin:', req.get('Origin') || 'unknown');
+  console.log('User-Agent:', req.get('User-Agent') || 'unknown');
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('Request Body:', req.body);
+  }
   next();
 });
 
@@ -69,48 +79,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// ✅ Add subscribe route BEFORE the error handler
-app.post('/api/subscribe', async (req, res) => {
-  try {
-    console.log('📧 Subscribe request received:', req.body);
-    
-    const { email, name } = req.body;
-    
-    if (!email) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Email is required' 
-      });
-    }
-    
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid email format' 
-      });
-    }
-    
-    // Here you can add your email service logic
-    // For now, just return success
-    console.log(`✅ Subscription successful for: ${email}`);
-    
-    res.status(200).json({
-      success: true,
-      message: `Thank you ${name || 'Friend'} for subscribing!`,
-      email: email
-    });
-    
-  } catch (error) {
-    console.error('❌ Subscribe error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-});
-
 // ✅ Add test route
 app.get('/api/test', (req, res) => {
   res.json({ 
@@ -120,11 +88,29 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+// ✅ Add test route for subscribe
+app.get('/api/subscribe/test', (req, res) => {
+  res.json({
+    message: 'Subscribe endpoint is reachable',
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/auth", forgotPasswordRoutes);
 app.use("/api/contact", contactRoutes);
-app.use("/api/subscribe", subscribeRoutes);
+app.use("/api/subscribe", subscribeRoutes); // This should handle the subscription
 app.use('/api/chatbot', chatbotRoutes);
+
+// ✅ Add a test route to verify subscribe is working
+app.get('/api/test-subscribe', (req, res) => {
+  res.json({
+    message: 'Subscribe test endpoint working',
+    subscribeEndpoint: '/api/subscribe',
+    method: 'POST',
+    expectedBody: { email: 'test@example.com', name: 'Test User' }
+  });
+});
 
 // ✅ Error handling
 app.use(errorHandler);
