@@ -137,6 +137,10 @@ LoanMate Team
               © ${new Date().getFullYear()} LoanMate. Built with ❤️ by Veeresh<br>
               You're receiving this because you subscribed as ${subscriberName} (${email})
             </p>
+
+            <h5>
+            Created by Veeresh - <a href="https://www.linkedin.com/in/veeresh-hedderi-83838525b" style="color: #764ba2; text-decoration: none;">Connect on LinkedIn</a>
+            </h5>
           </div>
         </div>
       `,
