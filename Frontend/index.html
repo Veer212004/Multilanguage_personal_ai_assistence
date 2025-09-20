@@ -49,5 +49,258 @@
 </script>
 <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
+<!-- ✅ Enhanced Chatbot Conversation Tracker -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const API_BASE = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000' 
+    : 'https://loanplatform.onrender.com';
+  
+  const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  let conversationInitialized = false;
+  let botpressReady = false;
+  
+  console.log('🤖 Chatbot tracker initialized with session:', sessionId);
+
+  // Initialize conversation session
+  async function initializeConversation() {
+    if (conversationInitialized) return;
+    
+    try {
+      const userEmail = getUserEmail();
+      
+      console.log('🚀 Creating conversation session...');
+      
+      const response = await fetch(`${API_BASE}/api/chatbot/conversation/start`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          sessionId: sessionId,
+          userEmail: userEmail,
+          userAgent: navigator.userAgent,
+          ipAddress: null
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        console.log('✅ Conversation session initialized:', data.conversationId);
+        conversationInitialized = true;
+      } else {
+        console.error('❌ Failed to initialize conversation:', data);
+      }
+    } catch (error) {
+      console.error('❌ Failed to initialize conversation:', error);
+    }
+  }
+
+  // Store message in database
+  async function storeMessage(message, messageType, messageId) {
+    if (!conversationInitialized) {
+      await initializeConversation();
+    }
+    
+    try {
+      console.log('💾 Storing message:', { 
+        messageType, 
+        message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
+        messageId: messageId 
+      });
+      
+      const response = await fetch(`${API_BASE}/api/chatbot/conversation/message`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          sessionId: sessionId,
+          message: message,
+          messageType: messageType,
+          messageId: messageId
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        console.log('✅ Message stored:', messageType, data.messageId);
+      } else {
+        console.error('❌ Failed to store message:', data);
+      }
+    } catch (error) {
+      console.error('❌ Failed to store message:', error);
+    }
+  }
+
+  // Get user email if logged in
+  function getUserEmail() {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user.email || null;
+      }
+    } catch (error) {
+      console.error('Error getting user email:', error);
+    }
+    return null;
+  }
+
+  // Initialize conversation when page loads
+  setTimeout(() => {
+    initializeConversation();
+  }, 1000);
+
+  // ✅ Listen for Botpress webchat events (REAL CONVERSATION CAPTURE)
+  window.addEventListener('message', function(event) {
+    // Only process messages from the same origin or Botpress
+    if (event.origin !== window.location.origin && !event.origin.includes('botpress')) {
+      // For Botpress webchat, we need to listen to all events
+      console.log('📨 Received message from:', event.origin, event.data);
+    }
+    
+    if (event.data && typeof event.data === 'object') {
+      const { type, payload } = event.data;
+      
+      console.log('📨 Webchat event:', { type, payload });
+      
+      // Handle different Botpress event types
+      if (type === 'webchat.opened') {
+        console.log('🤖 Chatbot opened');
+        initializeConversation();
+      }
+      
+      if (type === 'webchat.message' && payload) {
+        console.log('💬 New message:', payload);
+        
+        // Store user messages
+        if (payload.type === 'text' && payload.direction === 'outgoing') {
+          storeMessage(
+            payload.text || payload.payload?.text || 'User message',
+            'user',
+            payload.id || `user_${Date.now()}`
+          );
+        }
+        
+        // Store bot messages
+        if (payload.type === 'text' && payload.direction === 'incoming') {
+          storeMessage(
+            payload.text || payload.payload?.text || 'Bot response',
+            'bot',
+            payload.id || `bot_${Date.now()}`
+          );
+        }
+      }
+      
+      // Alternative event structure
+      if (type === 'message' && payload) {
+        if (payload.source === 'user' || payload.userId) {
+          storeMessage(
+            payload.text || payload.content || 'User message',
+            'user',
+            payload.id || `user_${Date.now()}`
+          );
+        }
+        
+        if (payload.source === 'bot' || payload.botId) {
+          storeMessage(
+            payload.text || payload.content || 'Bot response',
+            'bot',
+            payload.id || `bot_${Date.now()}`
+          );
+        }
+      }
+    }
+  });
+
+  // ✅ Alternative: Monitor DOM changes for Botpress messages
+  function observeBotpressMessages() {
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.addedNodes) {
+          mutation.addedNodes.forEach(function(node) {
+            if (node.nodeType === 1) { // Element node
+              // Look for Botpress message containers
+              const messages = node.querySelectorAll('[class*="message"], [class*="bubble"], [data-testid*="message"]');
+              
+              messages.forEach(function(messageEl) {
+                const text = messageEl.textContent?.trim();
+                if (text && text.length > 0) {
+                  // Try to determine if it's user or bot message
+                  const isUserMessage = messageEl.closest('[class*="user"]') || 
+                                       messageEl.classList.toString().includes('user') ||
+                                       messageEl.closest('[class*="outgoing"]');
+                  
+                  const messageId = `dom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                  
+                  console.log('🔍 DOM message detected:', { text, isUserMessage, messageId });
+                  
+                  storeMessage(
+                    text,
+                    isUserMessage ? 'user' : 'bot',
+                    messageId
+                  );
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+
+    // Start observing
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+    
+    console.log('👁️ DOM observer started for Botpress messages');
+  }
+
+  // Start DOM observation after a delay
+  setTimeout(observeBotpressMessages, 3000);
+
+  // ✅ Manual test function (call this from console)
+  window.testChatbotStorage = function() {
+    console.log('🧪 Testing chatbot storage...');
+    
+    storeMessage('Hello, I need help with a loan', 'user', 'test_user_' + Date.now());
+    
+    setTimeout(() => {
+      storeMessage('Hi! I can help you with loan information. What type of loan are you interested in?', 'bot', 'test_bot_' + Date.now());
+    }, 1000);
+    
+    setTimeout(() => {
+      storeMessage('I want a personal loan for 50000', 'user', 'test_user2_' + Date.now());
+    }, 2000);
+    
+    setTimeout(() => {
+      storeMessage('Great! For a personal loan of ₹50,000, here are your options...', 'bot', 'test_bot2_' + Date.now());
+    }, 3000);
+    
+    console.log('✅ Test messages sent!');
+  };
+
+  // Store conversation end when user leaves page
+  window.addEventListener('beforeunload', function() {
+    if (conversationInitialized) {
+      navigator.sendBeacon(
+        `${API_BASE}/api/chatbot/conversation/end`,
+        JSON.stringify({ 
+          sessionId: sessionId,
+          endReason: 'page_unload' 
+        })
+      );
+    }
+  });
+
+  console.log('🚀 Chatbot conversation tracker ready!');
+  console.log('🧪 To test manually, run: testChatbotStorage()');
+});
+</script>
+
  </body>
 </html>

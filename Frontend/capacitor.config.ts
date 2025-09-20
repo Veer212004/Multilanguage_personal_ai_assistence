@@ -5,7 +5,12 @@ const config: CapacitorConfig = {
   appName: 'LoanMate',
   webDir: 'dist',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    allowNavigation: [
+      'https://loanplatform.onrender.com',
+      'https://loanmate-platform.vercel.app'
+    ],
+    cleartext: true
   },
   plugins: {
     StatusBar: {
@@ -15,8 +20,11 @@ const config: CapacitorConfig = {
     },
     GoogleAuth: {
       scopes: ['profile', 'email'],
-      serverClientId: 'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com', // Replace with your actual web client ID
+      serverClientId: 'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com',
       forceCodeForRefreshToken: true
+    },
+    CapacitorHttp: {
+      enabled: true
     }
   }
 };

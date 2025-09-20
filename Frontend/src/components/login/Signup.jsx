@@ -21,8 +21,7 @@ import { ArrowBackIos } from '@mui/icons-material';
 // ✅ Add Capacitor imports
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-
-const API_BASE = "https://loanplatform.onrender.com";
+import { apiRequest, API_BASE } from '../../utils/api.js';
 
 const Signup = () => {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
@@ -69,54 +68,45 @@ const Signup = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // ✅ Updated signup function for mobile compatibility
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setIsSubmitting(true);
+    setError('');
 
-    // ✅ Check math captcha validation
+    // Validate captcha
     if (parseInt(userAnswer) !== mathCaptcha.answer) {
-      setError("Incorrect answer to security question.");
-      setIsSubmitting(false);
+      setError('Math captcha is incorrect');
       return;
     }
 
+    if (!formData.name || !formData.email || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      const res = await fetch(`${API_BASE}/api/auth/register`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData), // No captcha field needed
+      console.log('📝 Attempting signup...');
+      
+      const response = await apiRequest('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Signup failed.");
+      const data = await response.json();
+      console.log('📡 Signup response:', data);
 
-      login(data.user, data.token);
-      navigate("/");
-    } catch (err) {
-      setError(err.message);
-      // Generate new math captcha on error
-      const generateMathCaptcha = () => {
-        const num1 = Math.floor(Math.random() * 10) + 1;
-        const num2 = Math.floor(Math.random() * 10) + 1;
-        const operators = ['+', '-'];
-        const operator = operators[Math.floor(Math.random() * operators.length)];
-        
-        let answer;
-        if (operator === '+') {
-          answer = num1 + num2;
-        } else {
-          answer = num1 - num2;
-        }
-        
-        setMathCaptcha({
-          question: `${num1} ${operator} ${num2} = ?`,
-          answer: answer
-        });
-        setUserAnswer("");
-      };
-      generateMathCaptcha();
+      if (data.success) {
+        console.log('✅ Signup successful');
+        login(data.user, data.token);
+        navigate('/dashboard');
+      } else {
+        setError(data.message || 'Signup failed');
+      }
+    } catch (error) {
+      console.error('❌ Signup error:', error);
+      setError('Network error. Please check your connection.');
     } finally {
       setIsSubmitting(false);
     }
