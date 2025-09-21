@@ -98,7 +98,7 @@ const handleAPKDownload = async () => {
     setDownloadStatus('downloading');
     
     // ✅ Correct path - APK must be in public folder
-    const apkUrl = "/assets/LoanMate.apk";
+    const apkUrl = "/assets/LoanMateNew.apk";
     
     console.log('🔍 Checking APK at:', apkUrl);
     
