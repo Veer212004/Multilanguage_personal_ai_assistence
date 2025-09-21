@@ -8,6 +8,12 @@ const API_BASE_URL = 'https://loanplatform.onrender.com';
 export const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   
+  console.log('🌐 === API REQUEST DEBUG START ===');
+  console.log('URL:', url);
+  console.log('Method:', options.method || 'GET');
+  console.log('Platform:', Capacitor.isNativePlatform() ? 'Native' : 'Web');
+  console.log('Request body:', options.body);
+  
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
@@ -17,31 +23,57 @@ export const apiRequest = async (endpoint, options = {}) => {
     ...options,
   };
 
+  console.log('Headers:', defaultOptions.headers);
+
   try {
+    let response;
+    
     // ✅ Use CapacitorHttp for native platforms
     if (Capacitor.isNativePlatform()) {
-      console.log('📱 Using Capacitor HTTP for native platform');
+      console.log('📱 Using Capacitor HTTP');
       
-      const response = await CapacitorHttp.request({
+      const capacitorResponse = await CapacitorHttp.request({
         url,
         method: options.method || 'GET',
         headers: defaultOptions.headers,
         data: options.body ? JSON.parse(options.body) : undefined,
       });
 
-      return {
-        ok: response.status >= 200 && response.status < 300,
-        status: response.status,
-        json: async () => response.data,
-        text: async () => JSON.stringify(response.data),
+      console.log('📱 Raw Capacitor response:', capacitorResponse);
+
+      response = {
+        ok: capacitorResponse.status >= 200 && capacitorResponse.status < 300,
+        status: capacitorResponse.status,
+        statusText: capacitorResponse.status >= 200 && capacitorResponse.status < 300 ? 'OK' : 'Error',
+        json: async () => capacitorResponse.data,
+        text: async () => JSON.stringify(capacitorResponse.data),
       };
     } else {
       // ✅ Use fetch for web platforms
-      console.log('🌐 Using fetch for web platform');
-      return await fetch(url, defaultOptions);
+      console.log('🌐 Using fetch');
+      
+      response = await fetch(url, defaultOptions);
+      console.log('🌐 Fetch response status:', response.status);
+      console.log('🌐 Fetch response ok:', response.ok);
+      console.log('🌐 Fetch response statusText:', response.statusText);
     }
+
+    console.log('📡 Final response object:', {
+      ok: response.ok,
+      status: response.status,
+      statusText: response.statusText || 'Unknown'
+    });
+
+    console.log('🌐 === API REQUEST DEBUG END ===');
+    return response;
+    
   } catch (error) {
-    console.error('❌ API Request Error:', error);
+    console.error('❌ === API REQUEST ERROR ===');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Network status:', navigator.onLine ? 'Online' : 'Offline');
+    console.error('=========================');
     throw error;
   }
 };

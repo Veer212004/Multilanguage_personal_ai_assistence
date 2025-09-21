@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Grid,
@@ -32,8 +32,7 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-
+import { useAuth } from '../context/AuthContext';
 const LoanCard = styled(Card)(() => ({
   height: '100%',
   display: 'flex',
@@ -120,7 +119,10 @@ const loanTypes = [
 
 const LoanTypes = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useContext(AuthContext);
+  
+  // ✅ Use the useAuth hook instead of useContext
+  const { isAuthenticated, loading } = useAuth();
+  
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [isEligibilityModalOpen, setIsEligibilityModalOpen] = useState(false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
@@ -133,6 +135,15 @@ const LoanTypes = () => {
     employment: 'full-time',
     purpose: ''
   });
+
+  // ✅ Handle loading state
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <Typography>Loading...</Typography>
+      </Box>
+    );
+  }
 
   const openEligibilityCheck = (loan) => {
     setSelectedLoan(loan);

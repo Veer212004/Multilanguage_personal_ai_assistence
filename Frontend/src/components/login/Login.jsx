@@ -11,12 +11,13 @@ import { ArrowBackIos } from '@mui/icons-material';
 // ✅ Add Capacitor imports
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-import { apiRequest } from '../../utils/api.js';
+import { apiRequest, API_BASE } from '../../utils/api.js';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -32,36 +33,88 @@ const Login = () => {
   };
 
   // 🔹 real backend call 
+  // ✅ Updated login function for mobile compatibility
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
+    console.log('🔐 === LOGIN PROCESS START ===');
+    console.log('📝 Login data:', {
+      email: formData.email,
+      passwordLength: formData.password.length
+    });
+
+    // Validate required fields
+    if (!formData.email.trim() || !formData.password) {
+      setError('Please enter both email and password');
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      console.log('🔐 Attempting login...');
-      
+      const requestPayload = {
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password
+      };
+
       const response = await apiRequest('/api/auth/login', {
         method: 'POST',
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestPayload),
       });
 
       const data = await response.json();
-      console.log('📡 Login response:', data);
+      
+      console.log('📊 Login response debug:', {
+        status: response.status,
+        ok: response.ok,
+        data: data,
+        hasUser: !!data.user,
+        hasToken: !!data.token,
+        hasSuccess: data.success
+      });
 
-      if (data.success) {
-        console.log('✅ Login successful');
+      // ✅ Handle both old and new response formats
+      const isSuccess = response.ok && (
+        data.success === true ||                    // New format with success field
+        (response.status === 200 && data.user)     // Old format - just check for user
+      );
+
+      if (isSuccess) {
+        console.log('🎉 Login successful!');
+        
+        // Check if token exists
+        if (!data.token) {
+          console.warn('⚠️ Token missing, using fallback');
+          // Create a temporary token or handle gracefully
+          const fallbackToken = `temp_${Date.now()}_${data.user.id}`;
+          data.token = fallbackToken;
+        }
+        
+        // Clear form and login
+        setFormData({ email: "", password: "" });
+        setError('');
         login(data.user, data.token);
-        navigate('/dashboard');
+        navigate('/');
+        
       } else {
-        setError(data.message || 'Login failed');
+        console.log('❌ Login failed:', data);
+        setError(data.message || `Login failed (Status: ${response.status}). Please try again.`);
       }
+      
     } catch (error) {
-      console.error('❌ Login error:', error);
-      setError('Network error. Please check your connection.');
+      console.error('💥 Login error:', error);
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+      console.log('🏁 === LOGIN PROCESS END ===');
     }
   };
 

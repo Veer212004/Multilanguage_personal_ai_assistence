@@ -90,3 +90,32 @@ export const optionalAuth = async (req, res, next) => {
     next();
   }
 };
+
+// Add this route to your authRoutes.js file
+router.post('/check-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: cleanEmail });
+    
+    res.json({
+      success: true,
+      exists: !!existingUser
+    });
+
+  } catch (error) {
+    console.error('❌ Check email error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error checking email'
+    });
+  }
+});

@@ -59,6 +59,9 @@ const Navbar = () => {
     setAnchorElUser(event.currentTarget);
   };
 
+  const handleClick = () => {
+    navigate('/login');
+  }
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
@@ -222,7 +225,7 @@ const Navbar = () => {
                     <AccountIcon sx={{ mr: 1 }} />
                     <Typography textAlign="center">Profile</Typography>
                   </MenuItem>
-                  <MenuItem onClick={logout}>
+                  <MenuItem onClick={() => { logout(); handleClick(); }}>
                     <LogoutIcon sx={{ mr: 1 }} />
                     <Typography textAlign="center">Logout</Typography>
                   </MenuItem>

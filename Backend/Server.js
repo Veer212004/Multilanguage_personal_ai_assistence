@@ -1,6 +1,12 @@
+import dotenv from 'dotenv';
+dotenv.config(); // ✅ Make sure this is BEFORE any other imports
+
+console.log('🔍 Environment loaded:');
+console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
+console.log('MONGO_URI exists:', !!process.env.MONGO_URI);
+
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -8,10 +14,7 @@ import authRoutes from "./routes/authRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import subscribeRoutes from './routes/subscribe.js';
 import forgotPasswordRoutes from "./routes/forgotPassword.js";
-import chatbotRoutes from './routes/chatbotRoutes.js';
 import { errorHandler } from "./middleware/errorMiddleware.js";
-
-dotenv.config();
 
 const app = express();
 
@@ -100,7 +103,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/auth", forgotPasswordRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/subscribe", subscribeRoutes); // This should handle the subscription
-app.use('/api/chatbot', chatbotRoutes);
 
 // ✅ Add a test route to verify subscribe is working
 app.get('/api/test-subscribe', (req, res) => {

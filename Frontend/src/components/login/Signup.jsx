@@ -29,7 +29,8 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [mathCaptcha, setMathCaptcha] = useState({ question: "", answer: 0 });
   const [userAnswer, setUserAnswer] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ Add loading state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailChecked, setEmailChecked] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -68,45 +69,142 @@ const Signup = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // ✅ Updated signup function for mobile compatibility
+  // ✅ Check if email exists before signup
+  const checkEmailExists = async (email) => {
+    try {
+      const response = await apiRequest('/api/auth/check-email', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      return data.exists;
+    } catch (error) {
+      console.error('Error checking email:', error);
+      return false;
+    }
+  };
+
+  // ✅ Enhanced form validation
+  const validateForm = async () => {
+    // Reset error
+    setError('');
+
+    // Validate name
+    if (!formData.name.trim()) {
+      setError('Please enter your full name');
+      return false;
+    }
+    
+    if (formData.name.trim().length < 2) {
+      setError('Name must be at least 2 characters long');
+      return false;
+    }
+
+    // Validate email
+    if (!formData.email.trim()) {
+      setError('Please enter your email address');
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    // Check if email already exists
+    const emailExists = await checkEmailExists(formData.email);
+    if (emailExists) {
+      setError('An account with this email already exists. Please login instead.');
+      return false;
+    }
+
+    // Validate password
+    if (!formData.password) {
+      setError('Please enter a password');
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return false;
+    }
+
+    // Validate captcha
+    if (parseInt(userAnswer) !== mathCaptcha.answer) {
+      setError('Please solve the math problem correctly');
+      return false;
+    }
+
+    return true;
+  };
+
+  // ✅ Updated signup function with better error handling
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Validate captcha
-    if (parseInt(userAnswer) !== mathCaptcha.answer) {
-      setError('Math captcha is incorrect');
-      return;
-    }
-
-    if (!formData.name || !formData.email || !formData.password) {
-      setError('Please fill in all fields');
-      return;
-    }
+    console.log('🚀 === SIGNUP PROCESS START ===');
+    
+    // ... your validation code stays the same ...
 
     setIsSubmitting(true);
 
     try {
-      console.log('📝 Attempting signup...');
-      
+      const requestPayload = {
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password
+      };
+
+      console.log('📤 Sending signup request...');
+
       const response = await apiRequest('/api/auth/register', {
         method: 'POST',
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestPayload),
       });
 
       const data = await response.json();
-      console.log('📡 Signup response:', data);
+      
+      console.log('📊 Response debug:', {
+        status: response.status,
+        ok: response.ok,
+        data: data
+      });
 
-      if (data.success) {
-        console.log('✅ Signup successful');
+      // ✅ Handle success (status 200 or 201)
+      if (response.ok && (data.success === true || (response.status === 201 && data.user))) {
+        console.log('🎉 Signup successful!');
+        
+        // Clear form
+        setFormData({ name: "", email: "", password: "" });
+        setUserAnswer("");
+        setError('');
+        
+        // Login and redirect
         login(data.user, data.token);
-        navigate('/dashboard');
+        navigate('/');
+        
       } else {
-        setError(data.message || 'Signup failed');
+        // ✅ Handle specific error cases
+        console.log('❌ Signup failed:', data);
+        
+        if (response.status === 409) {
+          // Email already exists
+          setError('An account with this email already exists. Please try logging in instead or use a different email.');
+        } else if (response.status === 400) {
+          // Validation error
+          setError(data.message || 'Please check your input and try again.');
+        } else {
+          // Other errors
+          setError(data.message || `Signup failed (Status: ${response.status}). Please try again.`);
+        }
       }
+      
     } catch (error) {
-      console.error('❌ Signup error:', error);
-      setError('Network error. Please check your connection.');
+      console.error('💥 Signup error:', error);
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -133,7 +231,7 @@ const Signup = () => {
       if (res.ok) {
         const data = await res.json();
         login(data.user, data.token);
-        navigate("/Dashboard");
+        navigate("/");
       } else {
         // Fallback: signup with Google data directly
         const userData = {
@@ -142,7 +240,7 @@ const Signup = () => {
           picture: result.imageUrl,
         };
         login(userData, result.authentication.idToken || "google-signup-token");
-        navigate("/Dashboard");
+        navigate("/");
       }
     } catch (error) {
       console.error('Native Google signup error:', error);
