@@ -11,7 +11,8 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #1976d2; /* ✅ Match status bar color */
+  background: linear-gradient(45deg, #026be3 30%, #18191a 90%);
+      
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -25,7 +26,8 @@ html, body {
   padding: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #1976d2; /* ✅ Match status bar color */
+ background: linear-gradient(45deg, #026be3 30%, #18191a 90%);
+  /* ✅ Match status bar color */
 }
 
 body {
@@ -90,6 +92,7 @@ button:focus-visible {
 
 /* For Capacitor apps, ensure proper viewport handling */
 .capacitor-app {
-  background-color: #1976d2; /* ✅ Match status bar color */
+ background: linear-gradient(45deg, #026be3 30%, #18191a 90%);
+   /* ✅ Match status bar color */
 }
 

@@ -590,10 +590,10 @@ const Home = () => {
       {/* Hero Section */}
       <Box
         sx={{
-          background: 'linear-gradient(45deg, #1976d2 30%, #1565c0 90%)',
+          background: 'linear-gradient(45deg, #383a3dff 30%, #026be3 90%)',
           color: 'white',
           pt: { xs: 8, md: 12 },
-          pb: { xs: 8, md: 12 },
+          pb: { xs: 8, md: 12},
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -667,7 +667,7 @@ const Home = () => {
           </Grid>
         </Container>
       </Box>
-
+       
       {/* Interactive Statistics Section */}
       <Box sx={{ py: 8, bgcolor: 'background.paper' }}>
         <Container maxWidth="lg">

@@ -167,6 +167,7 @@ const LoanApplicationGuide = () => {
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
             🏦 Smart Loan Finder</h1>
             <p className="text-1xl">Quickly compare and match the best bank loans for your needs</p>
+            <br />
           <p className="text-gray-600 text-3xl">Find the perfect loan tailored just for you!</p>
         </div>
 
@@ -190,14 +191,14 @@ const LoanApplicationGuide = () => {
             {/* Question Card */}
             <div 
               key={step}
-              className={`bg-white rounded-3xl shadow-2xl p-8 md:p-12 transform transition-all duration-500 ${
+              className={` bg-gradient-to-br from-blue-500 to-black rounded-3xl shadow-2xl p-8 md:p-12 transform transition-all duration-500 ${
                 inputFocused ? 'scale-105' : 'hover:scale-102'
               } hover:shadow-3xl border border-gray-100`}
               style={{
                 animation: 'slideInUp 0.6s ease-out'
               }}
             >
-              <ArrowBackIos className="w-6 h-6 text-gray-600 mb-4 cursor-pointer" onClick={() => step > 0 && setStep(step - 1)} />
+              <ArrowBackIos className="w-6 h-6 text-white mb-4 cursor-pointer" onClick={() => step > 0 && setStep(step - 1)} />
               {/* Icon and Question */}
               <div className="flex items-center justify-center mb-8">
                 <div className={`p-4 rounded-full bg-gradient-to-r ${questions[step].gradient} text-white shadow-lg transform transition-transform duration-300 hover:scale-110`}>
@@ -205,7 +206,7 @@ const LoanApplicationGuide = () => {
                 </div>
               </div>
 
-              <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-center text-white mb-8">
                 {questions[step].label}
               </h2>
 

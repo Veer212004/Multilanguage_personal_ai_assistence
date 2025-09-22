@@ -25,6 +25,7 @@ import Employment from './components/Loancards/Employment';
 import LanguageSelector from './components/LanguageSelector';
 import Footer from './components/Footer';
 import ResetPassword from './components/login/ResetPassword'; // ✅ Import ResetPassword
+import DownloadApp from './components/DownloadApp';
 
 const theme = createTheme({
   palette: {
@@ -137,6 +138,7 @@ const AppContent = () => {
             <Route path="/CreditScore" element={<CreditScore />} />
             <Route path="/Employment" element={<Employment />} />
             <Route path="/language" element={<LanguageSelector />} />
+            <Route path="/download-app" element={<DownloadApp />} /> {/* New route for DownloadApp */}
           </Routes>
         </div>
       </Box>

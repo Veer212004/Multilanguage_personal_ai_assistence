@@ -576,7 +576,7 @@ const Profile = () => {
       </div>
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-8 right-8">
+      <div className="fixed bottom-8 left-8">
         <button
           onClick={isEditing ? saveChanges : startEditing}
           className={`p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 ${
