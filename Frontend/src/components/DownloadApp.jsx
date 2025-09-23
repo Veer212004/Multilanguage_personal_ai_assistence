@@ -11,12 +11,12 @@ const DownloadApp = () => {
     const triggerDownload = () => {
       const link = document.createElement('a');
       link.href = '/assets/LoanMateNewV-1.apk';
-      link.download = 'LoanMate.apk';
+      link.download = 'LoanMateNewV-1.apk';
       link.click();
       
       // Fallback: redirect to APK file directly after 2 seconds
       setTimeout(() => {
-        window.location.href = '/assets/LoanMateNew.apk';
+        window.location.href = '/assets/LoanMateNewV-1.apk';
       }, 2000);
     };
 
@@ -24,7 +24,7 @@ const DownloadApp = () => {
   }, []);
 
   const handleManualDownload = () => {
-    window.location.href = '/assets/LoanMateNew.apk';
+    window.location.href = '/assets/LoanMateNewV-1.apk';
   };
 
   const handleclick = () => {
