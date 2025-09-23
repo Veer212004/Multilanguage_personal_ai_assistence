@@ -10,7 +10,7 @@ const DownloadApp = () => {
     // Trigger download immediately when page loads
     const triggerDownload = () => {
       const link = document.createElement('a');
-      link.href = '/assets/LoanMateNew1.apk';
+      link.href = '/assets/LoanMateNewV-1.apk';
       link.download = 'LoanMate.apk';
       link.click();
       
